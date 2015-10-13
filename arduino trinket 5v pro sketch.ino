@@ -21,7 +21,7 @@ uint8_t  btnState      = LOW;
 uint8_t  btnLastState  = LOW;
 uint8_t  mainMode      = 0;
 
-unsigned long prevTime;
+uint32_t prevTime;
 
 uint32_t handColor = 0x6464FA;
 
@@ -70,7 +70,7 @@ void standbyEffect(uint32_t color, uint32_t wait) {
     if( (millis()-prevTime) > wait ) {
       if(brightValue < brightMax + 1) {
         pixelHands.setBrightness(brightValue);
-        for(int p = 0; p < handPixelCount; p++) {
+        for(int16_t p = 0; p < handPixelCount; p++) {
           pixelHands.setPixelColor(p, color);
         }
         pixelHands.show();
@@ -87,7 +87,7 @@ void standbyEffect(uint32_t color, uint32_t wait) {
     if( (millis()-prevTime) > wait ) {
       if(brightValue > brightMin -1) {
         pixelHands.setBrightness(brightValue);
-        for(int p=0; p < handPixelCount; p++) {
+        for(int16_t p=0; p < handPixelCount; p++) {
           pixelHands.setPixelColor(p, color);
         }
         pixelHands.show();
@@ -103,7 +103,7 @@ void standbyEffect(uint32_t color, uint32_t wait) {
 
 void theRandomSparks(uint32_t c, uint8_t wait) {
   if(millis() - prevTime >= wait) {
-    uint8_t i = random(handPixelCount);
+    int16_t i = random(handPixelCount);
     pixelHands.setBrightness(brightMax);
     pixelHands.setPixelColor(lastRandomPix, 0);
     pixelHands.show();
