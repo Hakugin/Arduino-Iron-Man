@@ -190,6 +190,7 @@ class NeoPatterns : public Adafruit_NeoPixel {
     TotalSteps = numPixels();
     Color1 = color1;
     Color2 = color2;
+    TotalSteps = numPixels()*2;
     lastPixel = 0;
   }
 
@@ -201,22 +202,23 @@ class NeoPatterns : public Adafruit_NeoPixel {
     lastPixel = i;
     lastUpdate=millis();
     show();
+    Increment();
   }
 };
 
-// Let's try placing defines here
-// Will need to update code so that LeftBtn controls RightHand and vice versa..
-#define leftBtnPin 9
-#define leftLedPin 6
+// Button on right hand controls left hand NeoPixels
+#define rightBtnPin 9
+#define leftLedPin  6
+
+// Left Hand Button controls Right hand NeoPixels
+#define leftBtnPin  8
+#define rightLedPin 5
 
 uint8_t leftBtnState;
 
 // Set up the NeoPixel Rings
-NeoPatterns LeftHand(12, leftLedPin, NEO_GRB + NEO_KHZ800, &LeftHandComplete);
-
-  // These were added to delay printing to Serial.
-  //uint16_t printDelay = 2048; // ~ 2 seconds
-  //uint32_t lastPrint;
+NeoPatterns LeftHand(7, leftLedPin, NEO_GRB + NEO_KHZ800, &LeftHandComplete);
+NeoPatterns RightHand(7, rightLedPin, NEO_GRB + NEO_KHZ800, &RightHandComplete);
 
 // Initialize everything and prepare to start
 void setup() {
@@ -224,19 +226,22 @@ void setup() {
   if(F_CPU == 16000000) clock_prescale_set(clock_div_1);
 #endif
   //Serial.begin(115200);
-  pinMode(leftBtnPin, INPUT_PULLUP);
-  digitalWrite(leftBtnPin, HIGH);
+  pinMode(rightBtnPin, INPUT_PULLUP);
+  digitalWrite(rightBtnPin, HIGH);
 
   // Initialize all the pixelStrips
   LeftHand.begin();
   LeftHand.setBrightness(85); // Set to 1/3 brightness to keep heat down and prevent accidental blinding
   LeftHand.Standby(0x6A6AFF, 0xFAFAFA, 5, 25);
+  RightHand.begin();
+  RightHand.setBrightness(85); // Set to 1/3 brightness to keep heat down and prevent accidental blinding
+  RightHand.Standby(0x6A6AFF, 0xFAFAFA, 5, 25);
 }
  
 // Main loop
 void loop() {
   LeftHand.Update();
-  leftBtnState = digitalRead(leftBtnPin);
+  leftBtnState = digitalRead(rightBtnPin);
   if(leftBtnState==LOW){
     if(LeftHand.ActivePattern==STANDBY) {
       LeftHand.Color1 = 0xFF0000;
@@ -249,21 +254,26 @@ void loop() {
       LeftHand.Interval=25;
     }
   }
-  //if(millis()-lastPrint >= printDelay){
-  //  Serial.println(leftBtnState);
-  //}
 }
 
 //------------------------------------------------------------
 //Completion Routines - get called on completion of a pattern
 //------------------------------------------------------------
-
-// Ring 1 Completion Callback
+// LeftHand Completion Callback
 void LeftHandComplete() {
-  if(LeftHand.ActivePattern==SPARKY) {
+  if(LeftHand.ActivePattern!=SPARKY) {
     LeftHand.Reverse();
   } else {
     LeftHand.Update();
+  }
+}
+
+// RightHand Completion Callback
+void RightHandComplete() {
+  if(RightHand.ActivePattern!=SPARKY) {
+    RightHand.Reverse();
+  } else {
+    RightHand.Update();
   }
 }
 
