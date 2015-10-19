@@ -207,12 +207,12 @@ class NeoPatterns : public Adafruit_NeoPixel {
 };
 
 // Button on right hand controls left hand NeoPixels
-#define rightBtnPin 9
-#define leftLedPin  6
+uint8_t rightBtnPin = 9;
+uint8_t leftLedPin  = 6;
 
 // Left Hand Button controls Right hand NeoPixels
-#define leftBtnPin  8
-#define rightLedPin 5
+uint8_t leftBtnPin  = 8;
+uint8_t rightLedPin = 5;
 
 uint8_t leftBtnState;
 
@@ -225,9 +225,10 @@ void setup() {
 #ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
   if(F_CPU == 16000000) clock_prescale_set(clock_div_1);
 #endif
-  //Serial.begin(115200);
   pinMode(rightBtnPin, INPUT_PULLUP);
   digitalWrite(rightBtnPin, HIGH);
+  pinMode(leftBtnPin, INPUT_PULLUP);
+  digitalWrite(leftBtnPin, HIGH);
 
   // Initialize all the pixelStrips
   LeftHand.begin();
@@ -252,6 +253,20 @@ void loop() {
       LeftHand.ActivePattern==STANDBY;
       LeftHand.Color1 = 0x6A6AFF;
       LeftHand.Interval=25;
+    }
+  }
+  RightHand.Update();
+  rightBtnState = digitalRead(rightBtnPin);
+  if(rightBtnState==LOW){
+    if(RightHand.ActivePattern==STANDBY) {
+      RightHand.Color1 = 0xFF0000;
+      RightHand.Interval=250;
+      RightHand.ActivePattern=SPARKY;
+    }
+    else {
+      RightHand.ActivePattern==STANDBY;
+      RightHand.Color1 = 0x6A6AFF;
+      RightHand.Interval=25;
     }
   }
 }
