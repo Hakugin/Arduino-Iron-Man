@@ -116,12 +116,12 @@ class ArcPatterns : public Adafruit_NeoPixel {
 // Updater for Start-up
   void StartupUpdate() {
     if(Index % 2 == 0) { // Check for even Index
-      for( uint8_t i; i <= numPixels()+2; i++ ) {
+      for( uint8_t i = 0; i <= numPixels(); i++ ) {
         setPixelColor(i, 0); // NeoPixels Off
       }
     }
     else { // Index is odd
-      for( uint8_t i; i <= numPixels()+2; i++ ) {
+      for( uint8_t i = 0; i <= numPixels(); i++ ) {
         setPixelColor(i, Color1); // NeoPixels On
       }
     }
