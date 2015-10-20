@@ -1,6 +1,6 @@
 /*
-  Attempt #6 at using a derived class, this one using switch statements...
-  Previous attempts were not uploaded for various reasons.
+  Partial Success!
+  Having issues with the Start up pattern, not all of the NeoPixels are lighting up.
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -24,12 +24,12 @@ class ArcPatterns : public Adafruit_NeoPixel {
 
   void (*OnComplete)();
 
-  ArcPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void(*callback) :Adafruit_NeoPixel(pixels, pin, type) {
+  ArcPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)()) :Adafruit_NeoPixel(pixels, pin, type) {
     OnComplete = callback;
   }
 
   void Update() {
-    if( (millis() - lastUpdate) > interval) {
+    if( (millis() - lastUpdate) > Interval) {
       lastUpdate = millis();
       switch(ActivePattern) {
         case STARTUP:
@@ -104,8 +104,8 @@ class ArcPatterns : public Adafruit_NeoPixel {
 
 // Initialize Start-up
   void Startup(uint32_t color1) {
-    ActivePatten = STARTUP;
-    Interval     = 50;
+    ActivePattern = STARTUP;
+    Interval     = 250;
     TotalSteps   = 9;
     Index        = 0;
     Direction    = FORWARD;
@@ -115,12 +115,12 @@ class ArcPatterns : public Adafruit_NeoPixel {
 // Updater for Start-up
   void StartupUpdate() {
     if(Index % 2 == 0) { // Check for even Index
-      for( uint8_t i; i < numPixels(); i++ ) {
+      for( uint8_t i; i <= numPixels()+2; i++ ) {
         setPixelColor(i, 0); // NeoPixels Off
       }
     }
     else { // Index is odd
-      for( uint8_t i; i < numPixels(); i++ ) {
+      for( uint8_t i; i <= numPixels()+2; i++ ) {
         setPixelColor(i, Color1); // NeoPixels On
       }
     }
@@ -204,6 +204,7 @@ void loop() {
 } // loop() end
 
 void LeftHandComplete() {
+  RightButtonCheck();
   switch(LeftHand.ActivePattern) {
     case STARTUP:
       LeftHand.Color1 = 0x6A6AFF;
@@ -223,33 +224,17 @@ void LeftHandComplete() {
 }
 
 void RightButtonCheck() {
-  rightBtnRead = digitalRead(rightBtnPin);
-  if(rightBtnRead != rightLastState) {
-    rightLastDebounce = millis();
+  rightBtnState = digitalRead(rightBtnPin);
+  if(rightBtnState == LOW){
+    LeftHand.ActivePattern = SPARKY;
+    LeftHand.Interval = 25;
+    LeftHand.TotalSteps = LeftHand.numPixels()*2;
   }
-  if( (millis() - rightLastDebounce) > debounceDelay ) {
-    if(rightBtnRead != rightBtnState) {
-      rightBtnState = rightBtnRead;
-      if(rightBtnState==LOW){
-        switch(LeftHand.ActivePattern) {
-          case STARTUP:
-            LeftHand.Color1 = 0x6A6AFF;
-            LeftHand.Color2 = 0xFAFAFA;
-            LeftHand.TotalSteps = 5;
-            LeftHand.Interval = 25;
-            LeftHand.ActivePattern = STANDBY;
-            break;
-          case STANDBY:
-            LeftHand.Reverse();
-            LeftHand.Update();
-            break;
-          default:
-            LeftHand.Update();
-            break;
-        } // end Switch statement
-      } // rightBtnState==LOW end
-    } // Read / State compare end
-  } // end button debounce check
+  else {
+    LeftHand.ActivePattern = STANDBY;
+    LeftHand.Interval = 25;
+    LeftHand.TotalSteps = 5;
+  }
 } // end RightButtonCheck
 
 /*
