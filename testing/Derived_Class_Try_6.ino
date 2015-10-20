@@ -1,6 +1,7 @@
 /*
   Partial Success!
   Having issues with the Start up pattern, not all of the NeoPixels are lighting up.
+  Button also has to be held down to keep SPARKY pattern running. This needs fixed.
 */
 
 #include <Adafruit_NeoPixel.h>
