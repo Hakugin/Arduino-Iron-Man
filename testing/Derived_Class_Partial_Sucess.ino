@@ -1,7 +1,6 @@
 /*
-  Partial Success!
-  Having issues with the Start up pattern, not all of the NeoPixels are lighting up.
-  Button also has to be held down to keep SPARKY pattern running. This needs fixed.
+  Another attempt at having a button press cycle through various patterns.
+  Can now cycle between STANDBY and SPARKY but needs button debouncing.
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -116,12 +115,12 @@ class ArcPatterns : public Adafruit_NeoPixel {
 // Updater for Start-up
   void StartupUpdate() {
     if(Index % 2 == 0) { // Check for even Index
-      for( uint8_t i = 0; i <= numPixels(); i++ ) {
+      for( uint8_t i=0; i <= numPixels(); i++ ) {
         setPixelColor(i, 0); // NeoPixels Off
       }
     }
     else { // Index is odd
-      for( uint8_t i = 0; i <= numPixels(); i++ ) {
+      for( uint8_t i=0; i <= numPixels(); i++ ) {
         setPixelColor(i, Color1); // NeoPixels On
       }
     }
@@ -160,6 +159,7 @@ class ArcPatterns : public Adafruit_NeoPixel {
     lastPixel     = 0;
     Interval      = interval;
     Color1        = color1;
+    Direction     = FORWARD;
   }
 
 // Update for Sparky
@@ -225,16 +225,19 @@ void LeftHandComplete() {
 }
 
 void RightButtonCheck() {
+// Button debouncing variables
+//uint16_t debounceDelay  = 50;
+//uint8_t  rightBtnState;
+//uint8_t  rightLastState = HIGH;
+//uint32_t rightLastDebounce;
   rightBtnState = digitalRead(rightBtnPin);
   if(rightBtnState == LOW){
-    LeftHand.ActivePattern = SPARKY;
-    LeftHand.Interval = 25;
-    LeftHand.TotalSteps = LeftHand.numPixels()*2;
-  }
-  else {
-    LeftHand.ActivePattern = STANDBY;
-    LeftHand.Interval = 25;
-    LeftHand.TotalSteps = 5;
+    if(LeftHand.ActivePattern==STANDBY){
+      LeftHand.ActivePattern=SPARKY;
+    }
+    else {
+      LeftHand.ActivePattern=STANDBY;
+    }
   }
 } // end RightButtonCheck
 
