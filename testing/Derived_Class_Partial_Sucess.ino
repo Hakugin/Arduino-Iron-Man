@@ -1,6 +1,7 @@
 /*
   Another attempt at having a button press cycle through various patterns.
-  Can now cycle between STANDBY and SPARKY but needs button debouncing.
+  Can now cycle between STANDBY and SPARKY but needs better button debouncing.
+  Which is something we are attempting to do with this update.
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -225,27 +226,32 @@ void LeftHandComplete() {
 }
 
 void RightButtonCheck() {
-// Button debouncing variables
-//uint16_t debounceDelay  = 50;
-//uint8_t  rightBtnState;
-//uint8_t  rightLastState = HIGH;
-//uint32_t rightLastDebounce;
-  rightBtnState = digitalRead(rightBtnPin);
-  if( (millis() - rightLastDebounce) > debounceDelay ) {
-    if( (rightBtnState == LOW) && (rightBtnState != rightLastState) ) {
-      if(LeftHand.ActivePattern==STANDBY){
-        LeftHand.ActivePattern=SPARKY;
+  // Attempt at better debounce detection...
+  int rightBtnRead = digitalRead(rightBtnPin);
+  if(rightBtnRead != rightLastState) {
+    rightLastDebounce = millis();
+  }
+  if( (millis()-rightLastDebounce) > debounceDelay) {
+    if (rightBtnRead != rightBtnState) {
+      rightBtnState = rightBtnRead;
+      if (rightBtnState == HIGH) {
+        if(LeftHand.ActivePattern==STANDBY) {
+          LeftHand.Color1 = 0xFF0000; // To be changed after testing
+          LeftHand.TotalSteps = (LeftHand.numPixels()*2);
+          LeftHand.Interval = 250;
+          LeftHand.ActivePattern = SPARKY;
+        }
+        else {
+          LeftHand.Color1 = 0x6A6AFF;
+          LeftHand.Color2 = 0xFAFAFA;
+          LeftHand.TotalSteps = 5;
+          LeftHand.Interval = 25;
+          LeftHand.ActivePattern = STANDBY;        
+        }
       }
-      else {
-        LeftHand.ActivePattern=STANDBY;
-      }
-      rightLastDebounce = millis();
-      rightLastState = rightBtnState;
-    }
-    else{
-      rightLastState = HIGH;
     }
   }
+  rightLastState = rightBtnRead;
 } // end RightButtonCheck
 
 /*
