@@ -236,7 +236,7 @@ void RightButtonCheck() {
   if( (millis()-rightLastDebounce) > debounceDelay) {
     if (rightBtnRead != rightBtnState) {
       rightBtnState = rightBtnRead;
-      if (rightBtnState == HIGH) {
+      if (rightBtnState == LOW) {
         if(LeftHand.ActivePattern==STANDBY) {
           LeftHand.Color1 = 0xAAAAFF; // To be changed after testing
           LeftHand.TotalSteps = 2;
