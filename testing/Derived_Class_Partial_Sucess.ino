@@ -180,7 +180,7 @@ class ArcPatterns : public Adafruit_NeoPixel {
 #define rightBtnPin 9
 
 // Button debouncing variables
-uint16_t debounceDelay  = 50;
+uint16_t debounceDelay  = 100;
 uint8_t  rightBtnState;
 uint8_t  rightLastState = HIGH;
 uint32_t rightLastDebounce;
@@ -231,12 +231,19 @@ void RightButtonCheck() {
 //uint8_t  rightLastState = HIGH;
 //uint32_t rightLastDebounce;
   rightBtnState = digitalRead(rightBtnPin);
-  if(rightBtnState == LOW){
-    if(LeftHand.ActivePattern==STANDBY){
-      LeftHand.ActivePattern=SPARKY;
+  if( (millis() - rightLastDebounce) > debounceDelay ) {
+    if( (rightBtnState == LOW) && (rightBtnState != rightLastState) ) {
+      if(LeftHand.ActivePattern==STANDBY){
+        LeftHand.ActivePattern=SPARKY;
+      }
+      else {
+        LeftHand.ActivePattern=STANDBY;
+      }
+      rightLastDebounce = millis();
+      rightLastState = rightBtnState;
     }
-    else {
-      LeftHand.ActivePattern=STANDBY;
+    else{
+      rightLastState = HIGH;
     }
   }
 } // end RightButtonCheck
