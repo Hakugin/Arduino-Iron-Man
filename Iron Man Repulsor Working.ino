@@ -1,8 +1,11 @@
-/*
-  Another attempt at having a button press cycle through various patterns.
-  Can now cycle between STANDBY and SPARKY but needs better button debouncing.
-  Which is something we are attempting to do with this update.
-*/
+/*******************************************************************************
+  Project     : Iron Man Costume Effects
+  Author(s)   : Mike Stover and Son
+  Description : Trinket Pro (5v) powered lighting effects for my son's Iron Man
+                costume. Current code controls the hand repulsors and will
+                switch between 2 different pattern modes. Chest Arc Reactor
+                and sound effects are planned for future additions.
+ *******************************************************************************/
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
@@ -170,7 +173,6 @@ class ArcPatterns : public Adafruit_NeoPixel {
     }
     uint8_t i = random(numPixels());
     setPixelColor(i, Color1);
-    //lastPixel = i;
     lastUpdate=millis();
     show();
     Increment();
@@ -179,17 +181,32 @@ class ArcPatterns : public Adafruit_NeoPixel {
 
 // Definitions / Initializations
 //Starting with left hand and control button
-#define leftLedPin  6
 #define rightBtnPin 9
+#define leftLedPin  6
+
+// Right hand and control button
+#define leftBtnPin  8
+#define rightLedPin 5
 
 // Button debouncing variables
 uint16_t debounceDelay  = 50;
+
+// Button on Right Hand
 uint8_t  rightBtnState;
 uint8_t  rightLastState = HIGH;
 uint32_t rightLastDebounce;
 
+// Button on Left Hand
+uint8_t  leftBtnState;
+uint8_t  leftLastState = HIGH;
+uint32_t leftLastDebounce;
+
 // NeoPixel setup
+// NeoPixel on Left Hand
 ArcPatterns LeftHand(12, leftLedPin, NEO_GRB + NEO_KHZ800, &LeftHandComplete);
+
+// NeoPixel on Right Hand
+ArcPatterns RightHand(12, rightLedPin, NEO_GRB + NEO_KHZ800, &RightHandComplete);
 
 void setup() {
 #ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
@@ -198,15 +215,28 @@ void setup() {
   pinMode(rightBtnPin, INPUT_PULLUP);
   digitalWrite(rightBtnPin, HIGH);
 
-  LeftHand.begin();
-  LeftHand.setBrightness(85); // 1/3 brightness to reduce heat and sight interference
-  LeftHand.Startup(0x6A6AFF);
+  pinMode(leftBtnPin, INPUT_PULLUP);
+  digitalWrite(leftBtnPin, HIGH);
+
+  LeftHand.begin(); // Initialize Left Hand NeoPixels
+ // 1/3 brightness to reduce heat and sight interference
+  LeftHand.setBrightness(85);
+  LeftHand.Startup(0x6A6AFF); // Set color to blueish-white
+
+  RightHand.begin(); // Initialize Right Hand NeoPixels
+ // 1/3 brightness to reduce heat and sight interference
+  RightHand.setBrightness(85);
+  RightHand.Startup(0x6A6AFF); // Set color to blueish-white
 }
 
 void loop() {
   LeftHand.Update();
+  RightHand.Update();
+  RightButtonCheck();
+  LeftButtonCheck();
 } // loop() end
 
+// OnComplete function for L. Hand
 void LeftHandComplete() {
   RightButtonCheck();
   switch(LeftHand.ActivePattern) {
@@ -225,8 +255,30 @@ void LeftHandComplete() {
       LeftHand.Update();
       break;
   } // end Switch statement
-}
+} // End RightHandComplete function
 
+// OnComplete function for R. Hand
+void LeftHandComplete() {
+  LeftButtonCheck();
+  switch(RightHand.ActivePattern) {
+    case STARTUP:
+      RightHand.Color1 = 0x6A6AFF;
+      RightHand.Color2 = 0xFAFAFA;
+      RightHand.TotalSteps = 5;
+      RightHand.Interval = 25;
+      RightHand.ActivePattern = STANDBY;
+      break;
+    case STANDBY:
+      RightHand.Reverse();
+      RightHand.Update();
+      break;
+    default:
+      RightHand.Update();
+      break;
+  } // end Switch statement
+} // End LeftHandComplete function
+
+// Check Right Button Status and if needed change NeoPixel pattern on L. Hand
 void RightButtonCheck() {
   // Attempt at better debounce detection...
   int rightBtnRead = digitalRead(rightBtnPin);
@@ -256,6 +308,72 @@ void RightButtonCheck() {
   rightLastState = rightBtnRead;
 } // end RightButtonCheck
 
-/*
+// Check Left Button Status and if needed change NeoPixel pattern on R. Hand
+void LeftButtonCheck() {
+  // Attempt at better debounce detection...
+  int leftBtnRead = digitalRead(leftBtnPin);
+  if(leftBtnRead != leftLastState) {
+    rightLastDebounce = millis();
+  }
+  if( (millis()-rightLastDebounce) > debounceDelay) {
+    if (leftBtnRead != leftBtnState) {
+      leftBtnState = leftBtnRead;
+      if (leftBtnState == LOW) {
+        if(RightHand.ActivePattern==STANDBY) {
+          RightHand.Color1 = 0xAAAAFF; // To be changed after testing
+          RightHand.TotalSteps = 2;
+          RightHand.Interval = 50;
+          RightHand.ActivePattern = SPARKY;
+        }
+        else {
+          RightHand.Color1 = 0x6A6AFF;
+          RightHand.Color2 = 0xFAFAFA;
+          RightHand.TotalSteps = 5;
+          RightHand.Interval = 25;
+          RightHand.ActivePattern = STANDBY;        
+        }
+      }
+    }
+  }
+  leftLastState = leftBtnRead;
+} // end LeftButtonCheck
+
+/*************************************************************************************
+ This needs tested, but could allow for 1 function to respond to 
+ both buttons and control both hands. IE:
+ ButtonCheck(LeftHand, rightBtnPin, rightBtnState, rightLastState, rightLastDebounce);
+ ButtonCheck(RightHand, leftBtnPin, leftBtnState, leftLastState, leftLastDebounce);
+ This could avoid unneeded duplicated code.
+
+void ButtonCheck(Adafruit_NeoPixel &ring, uint8_t btnPin, uint8_t btnState, uint8_t lastState, uint32_t lastDebounce) {
+  uint8_t btnRead = digitalRead(btnPin);
+  if(btnRead != lastState) {
+    lastDebounce = millis();
+  }
+  if( (millis() - lastDebounce) > debounceDelay ) {
+    if(btnRead != btnState) {
+      btnState = btnRead;
+      if (btnState==LOW) {
+        if(ring.ActivePattern==STANDBY) {
+          ring.Color1     = 0xAAAAFF;
+          ring.TotalSteps = 2;
+          ring.Interval   = 50;
+          ring.ActivePatten = SPARKY;
+        }
+        else {
+          ring.Color1 = 0x6A6AFF;
+          ring.Color2 = 0xFAFAFA;
+          ring.TotalSteps = 5;
+          ring.Interval = 25;
+          ring.ActivePattern = STANDBY;        
+        }
+      }
+    }
+  }
+  lastState = btnRead;
+}
+ *************************************************************************************/
+
+/**************
  * End of File
- */
+ **************/
