@@ -6,6 +6,7 @@
 // Pin definitions
 // Only 1 pin to define for now
 #define pinChestPixel 9
+// Define the number of NeoPixels on the Arc Reactor
 #define cntChestPixel 12
 
 // Various variables
@@ -16,8 +17,13 @@ uint8_t brightValue   = 20;
 uint8_t fadeState     = 0; // 0: In, 1: out
 uint8_t lastRandomPix;
 
+// Last time the LEDs were updated
 uint32_t prevTime;
+
+// Delay between changes
 uint32_t standbyDelay = 15;
+
+// Default color
 uint32_t chestColor = 0x6464FA;
 
 // Initialize the NeoPixels in the "Chest Reactor"
