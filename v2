@@ -1,0 +1,102 @@
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
+ #include <avr/power.h>
+#endif
+
+// Pin definitions
+// Only 1 pin to define for now
+#define pinChestPixel 10
+#define cntChestPixel 12
+
+// Various variables
+uint8_t brightDefault = 84;
+uint8_t brightMin     = 20;
+uint8_t brightMax     = 168;
+uint8_t brightValue   = 20;
+uint8_t fadeState     = 0; // 0: In, 1: out
+uint8_t lastRandomPix;
+
+uint32_t prevTime;
+uint32_t standbyDelay = 5;
+uint32_t chestColor = 0x6464FA;
+
+uint16_t startDelay = 250;
+
+// Initialize the NeoPixels in the "Chest Reactor"
+Adafruit_NeoPixel pixelsChest = Adafruit_NeoPixel(cntChestPixel, pinChestPixel);
+
+void setup() {
+#ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
+  if(F_CPU == 16000000) clock_prescale_set(clock_div_1);
+#endif
+  pixelsChest.begin();
+  pixelsChest.setBrightness(brightDefault);
+  
+  for(int16_t p = 0; p < cntChestPixel; p++) {
+    pixelsChest.setPixelColor(p, 0xFF0000);
+  }
+  pixelsChest.show();
+  delay(startDelay);
+  
+  for(int16_t p = 0; p < cntChestPixel; p++) {
+    pixelsChest.setPixelColor(p, 0x00FF00);
+  }
+  pixelsChest.show();
+  delay(startDelay);
+  
+  for(int16_t p = 0; p < cntChestPixel; p++) {
+    pixelsChest.setPixelColor(p, 0x0000FF);
+  }
+  pixelsChest.show();
+  delay(startDelay);
+  
+  for(int16_t p = 0; p < cntChestPixel; p++) {
+    pixelsChest.setPixelColor(p, 0x000000);
+  }
+  pixelsChest.show();
+  
+}
+
+void loop() {
+  standbyEffect(chestColor, standbyDelay);
+
+}
+
+void standbyEffect(Adafruit_NeoPixel *pPCObj, uint32_t color, uint32_t wait) {
+  if(fadeState==0) {
+    if( (millis()-prevTime) > wait ) {
+      if(brightValue < brightMax + 1) {
+        pPCObj->setBrightness(brightValue);
+        for(int16_t p = 0; p < cntChestPixel; p++) {
+          pPCObj->setPixelColor(p, color);
+        }
+        pPCObj->show();
+        brightValue++;
+        prevTime = millis();
+      }
+      else {
+        fadeState = 1;
+      }
+    }
+  }
+  else {
+    if( (millis()-prevTime) > wait ) {
+      if(brightValue > brightMax + 1) {
+        pPCObj->setBrightness(brightValue);
+        for(int16_t p = 0; p < cntChestPixel; p++) {
+          pPCObj->setPixelColor(p, color);
+        }
+        pPCObj->show();
+        brightValue--;
+        prevTime = millis();
+      }
+      else {
+        fadeState = 0;
+      }
+    }
+  }
+}
+
+/*************
+  End of file
+ *************/
