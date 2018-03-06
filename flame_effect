@@ -24,9 +24,9 @@ void setup() {
 }
 
 void loop() {
-  int r = 255;
+  int r = 25;
   int g = 96;
-  int b = 12;
+  int b = 255;
 
   for(int x = 0; x <30; x++) {
     int flicker = random(0,40);
